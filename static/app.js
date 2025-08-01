@@ -39,6 +39,7 @@ function callApi(url, options = {}) {
 function createTodoElement(todo) {
   /* <li> principal */
   const li = document.createElement("li");
+  li.classList.add("new");
   li.dataset.id = todo.id;             // guardamos o id no próprio <li>
 
   /* se a tarefa está concluída, adicionamos classe "done" */
@@ -80,8 +81,42 @@ function renderTodoList(todos) {
     const li = createTodoElement(todo);
     /* Colocamos no início da lista (tarefas recentes primeiro) */
     todoList.prepend(li);
+    setTimeout(() => li.classList.remove("new"), 50);
   });
 }
+
+/* Cria um <li> para cada nota */
+function createNoteElement(note) {
+  const li = document.createElement("li");
+  li.classList.add("new");
+  li.dataset.id = note.id;
+
+  const strong = document.createElement("strong");
+  strong.textContent = note.title + ": ";
+  li.appendChild(strong);
+
+  li.appendChild(document.createTextNode(note.content));
+
+  /* botão de apagar */
+  const delBtn = document.createElement("button");
+  delBtn.textContent = "🗑️";
+  delBtn.addEventListener("click", () => deleteNote(note.id));
+  li.appendChild(delBtn);
+
+  return li;
+}
+/* Mostra todas as notas vindas da API dentro da <ul> */
+function renderNoteList(notes) {
+    console.log("DEBUG-NOTAS:", notes);   // ← adiciona só isto
+  noteList.innerHTML = "";          // limpa primeiro
+  notes.forEach(note => {
+    const li = createNoteElement(note);
+    noteList.prepend(li);
+    setTimeout(() => li.classList.remove("new"), 50);
+  });
+}
+
+
 
 /* -------------------------------------------------------------
    4. Funções que comunicam com a API Flask
@@ -159,3 +194,81 @@ todoForm.addEventListener("submit", function (event) {
    6. Vamos lá buscar as tarefas logo que a página carregar
    ------------------------------------------------------------- */
 fetchTodos();
+
+/* ----- NOTAS ----- */
+const noteList  = document.getElementById("note-list");
+const noteForm  = document.getElementById("note-form");
+const noteTitle = document.getElementById("note-title");
+const noteBody  = document.getElementById("note-body");
+
+/* ---------- NOTAS : criar elementos e renderizar ---------- */
+
+/* cria um <li> para uma nota */
+function createNoteElement(note) {
+  const li = document.createElement("li");
+  li.classList.add("new");          // animação de entrada (se tiveres no CSS)
+  li.dataset.id = note.id;
+
+  // título a bold
+  const strong = document.createElement("strong");
+  strong.textContent = note.title + ": ";
+  li.appendChild(strong);
+
+  // corpo da nota
+  li.appendChild(document.createTextNode(note.content));
+
+  // botão apagar
+  const delBtn = document.createElement("button");
+  delBtn.textContent = "🗑️";
+  delBtn.addEventListener("click", () => deleteNote(note.id));
+  li.appendChild(delBtn);
+
+  return li;
+}
+
+/* insere todas as notas no <ul id="note-list"> */
+function renderNoteList(notes) {
+  noteList.innerHTML = "";               // limpa lista actual
+  notes.forEach(note => {
+    const li = createNoteElement(note);
+    noteList.prepend(li);                // notas mais recentes primeiro
+    setTimeout(() => li.classList.remove("new"), 50);
+  });
+}
+
+function fetchNotes() {
+  callApi("/api/notes")
+    .then(renderNoteList)
+    .catch(() => alert("Erro ao obter notas"));
+}
+
+function addNote(title, content) {
+  callApi("/api/notes", {
+    method: "POST",
+    body: JSON.stringify({ title, content })
+  }).then(fetchNotes);
+}
+
+/* listeners */
+noteForm.addEventListener("submit", e => {
+  e.preventDefault();
+  addNote(noteTitle.value.trim(), noteBody.value.trim());
+  noteTitle.value = ""; noteBody.value = "";
+});
+
+/* Apagar nota (DELETE /api/notes/:id) */
+function deleteNote(id) {
+  fetch("/api/notes/" + id, { method: "DELETE" })
+    .then(response => {
+      if (response.ok) {
+        fetchNotes();              // refresca a lista
+      } else {
+        alert("Erro ao apagar nota 😢");
+      }
+    })
+    .catch(() => alert("Erro ao apagar nota 😢"));
+}
+
+/* chamada inicial */
+fetchNotes();
+

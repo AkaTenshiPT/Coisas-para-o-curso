@@ -17,6 +17,9 @@
     <!-- Título principal -->
     <h1>Lista de Tarefas</h1>
 
+<a href="{{ url_for('random_page') }}" class="btn-random">Número Aleatório</a>
+
+
     <!-- Formulário para adicionar uma nova tarefa -->
     <form id="todo-form">
       <!-- Campo de texto onde o utilizador escreve a tarefa -->
@@ -35,8 +38,17 @@
       <!-- Os <li> são criados dinamicamente em JavaScript -->
     </ul>
 
-  </main>
+<h2 class="section-title">Notas</h2>
 
+<form id="note-form" class="note-row">
+  <input id="note-title" type="text" placeholder="Título"     autocomplete="off">
+  <input id="note-body"  type="text" placeholder="Conteúdo"   autocomplete="off">
+  <button class="btn" type="submit">Adicionar Nota</button>
+</form>
+
+<ul id="note-list"></ul>
+
+  </main>
   <!-- Ligamos o nosso ficheiro JavaScript -->
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
